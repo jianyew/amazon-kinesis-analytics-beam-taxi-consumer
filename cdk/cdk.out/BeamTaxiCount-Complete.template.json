@@ -353,6 +353,40 @@
             },
             {
               "Action": [
+                "codebuild:CreateReportGroup",
+                "codebuild:CreateReport",
+                "codebuild:UpdateReport",
+                "codebuild:BatchPutTestCases",
+                "codebuild:BatchPutCodeCoverages"
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":codebuild:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":report-group/",
+                    {
+                      "Ref": "BeamTaxiConsumerBuildPipelineCodebuildProjectE94068B3"
+                    },
+                    "-*"
+                  ]
+                ]
+              }
+            },
+            {
+              "Action": [
                 "s3:GetObject*",
                 "s3:GetBucket*",
                 "s3:List*",
@@ -407,6 +441,7 @@
         "Environment": {
           "ComputeType": "BUILD_GENERAL1_SMALL",
           "Image": "aws/codebuild/java:openjdk-11",
+          "ImagePullCredentialsType": "CODEBUILD",
           "PrivilegedMode": false,
           "Type": "LINUX_CONTAINER"
         },
@@ -419,7 +454,8 @@
         "Source": {
           "BuildSpec": "{\n  \"version\": \"0.2\",\n  \"phases\": {\n    \"build\": {\n      \"commands\": [\n        \"cd amazon-kinesis-analytics-beam-taxi-consumer-master\",\n        \"mvn clean package -B\"\n      ]\n    }\n  },\n  \"artifacts\": {\n    \"files\": [\n      \"target/amazon-kinesis-analytics-beam-taxi-consumer-*.jar\"\n    ],\n    \"discard-paths\": false,\n    \"base-directory\": \"amazon-kinesis-analytics-beam-taxi-consumer-master\"\n  }\n}",
           "Type": "CODEPIPELINE"
-        }
+        },
+        "EncryptionKey": "alias/aws/s3"
       },
       "Metadata": {
         "aws:cdk:path": "BeamTaxiCount-Complete/BeamTaxiConsumerBuildPipeline/CodebuildProject/Resource"
@@ -1196,16 +1232,16 @@
         "MapPublicIpOnLaunch": true,
         "Tags": [
           {
-            "Key": "Name",
-            "Value": "BeamTaxiCount-Complete/VPC/publicSubnet1"
-          },
-          {
             "Key": "aws-cdk:subnet-name",
             "Value": "public"
           },
           {
             "Key": "aws-cdk:subnet-type",
             "Value": "Public"
+          },
+          {
+            "Key": "Name",
+            "Value": "BeamTaxiCount-Complete/VPC/publicSubnet1"
           }
         ]
       },
@@ -1280,16 +1316,16 @@
         "MapPublicIpOnLaunch": true,
         "Tags": [
           {
-            "Key": "Name",
-            "Value": "BeamTaxiCount-Complete/VPC/publicSubnet2"
-          },
-          {
             "Key": "aws-cdk:subnet-name",
             "Value": "public"
           },
           {
             "Key": "aws-cdk:subnet-type",
             "Value": "Public"
+          },
+          {
+            "Key": "Name",
+            "Value": "BeamTaxiCount-Complete/VPC/publicSubnet2"
           }
         ]
       },
@@ -1638,6 +1674,40 @@
             },
             {
               "Action": [
+                "codebuild:CreateReportGroup",
+                "codebuild:CreateReport",
+                "codebuild:UpdateReport",
+                "codebuild:BatchPutTestCases",
+                "codebuild:BatchPutCodeCoverages"
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":codebuild:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":report-group/",
+                    {
+                      "Ref": "KinesisReplayInfrastructureKinesisReplayBuildPipelineCodebuildProject8B60D31D"
+                    },
+                    "-*"
+                  ]
+                ]
+              }
+            },
+            {
+              "Action": [
                 "s3:GetObject*",
                 "s3:GetBucket*",
                 "s3:List*",
@@ -1692,6 +1762,7 @@
         "Environment": {
           "ComputeType": "BUILD_GENERAL1_SMALL",
           "Image": "aws/codebuild/java:openjdk-11",
+          "ImagePullCredentialsType": "CODEBUILD",
           "PrivilegedMode": false,
           "Type": "LINUX_CONTAINER"
         },
@@ -1704,7 +1775,8 @@
         "Source": {
           "BuildSpec": "{\n  \"version\": \"0.2\",\n  \"phases\": {\n    \"build\": {\n      \"commands\": [\n        \"cd amazon-kinesis-replay-release-0.1.0\",\n        \"mvn clean package -B\"\n      ]\n    }\n  },\n  \"artifacts\": {\n    \"files\": [\n      \"target/amazon-kinesis-replay-*.jar\"\n    ],\n    \"discard-paths\": false,\n    \"base-directory\": \"amazon-kinesis-replay-release-0.1.0\"\n  }\n}",
           "Type": "CODEPIPELINE"
-        }
+        },
+        "EncryptionKey": "alias/aws/s3"
       },
       "Metadata": {
         "aws:cdk:path": "BeamTaxiCount-Complete/KinesisReplayInfrastructure/KinesisReplayBuildPipeline/CodebuildProject/Resource"
@@ -2782,7 +2854,19 @@
       "Type": "AWS::Kinesis::Stream",
       "Properties": {
         "ShardCount": 4,
-        "RetentionPeriodHours": 24
+        "RetentionPeriodHours": 24,
+        "StreamEncryption": {
+          "Fn::If": [
+            "AwsCdkKinesisEncryptedStreamsUnsupportedRegions",
+            {
+              "Ref": "AWS::NoValue"
+            },
+            {
+              "EncryptionType": "KMS",
+              "KeyId": "alias/aws/kinesis"
+            }
+          ]
+        }
       },
       "Metadata": {
         "aws:cdk:path": "BeamTaxiCount-Complete/InputStream/Resource"
@@ -2882,9 +2966,11 @@
           "Statement": [
             {
               "Action": [
-                "kinesis:DescribeStream",
+                "kinesis:DescribeStreamSummary",
                 "kinesis:GetRecords",
-                "kinesis:GetShardIterator"
+                "kinesis:GetShardIterator",
+                "kinesis:ListShards",
+                "kinesis:SubscribeToShard"
               ],
               "Effect": "Allow",
               "Resource": {
@@ -3077,9 +3163,11 @@
             },
             {
               "Action": [
-                "kinesis:DescribeStream",
+                "kinesis:DescribeStreamSummary",
                 "kinesis:GetRecords",
-                "kinesis:GetShardIterator"
+                "kinesis:GetShardIterator",
+                "kinesis:ListShards",
+                "kinesis:SubscribeToShard"
               ],
               "Effect": "Allow",
               "Resource": {
@@ -3523,6 +3611,16 @@
       "Metadata": {
         "aws:cdk:path": "BeamTaxiCount-Complete/FlinkInfrastructure/AppTerminatedTopic/Resource"
       }
+    },
+    "CDKMetadata": {
+      "Type": "AWS::CDK::Metadata",
+      "Properties": {
+        "Modules": "aws-cdk=1.73.0,@aws-cdk/assets=1.73.0,@aws-cdk/aws-applicationautoscaling=1.73.0,@aws-cdk/aws-autoscaling=1.73.0,@aws-cdk/aws-autoscaling-common=1.73.0,@aws-cdk/aws-autoscaling-hooktargets=1.73.0,@aws-cdk/aws-cloudformation=1.73.0,@aws-cdk/aws-cloudwatch=1.73.0,@aws-cdk/aws-cloudwatch-actions=1.73.0,@aws-cdk/aws-codebuild=1.73.0,@aws-cdk/aws-codeguruprofiler=1.73.0,@aws-cdk/aws-codepipeline=1.73.0,@aws-cdk/aws-codepipeline-actions=1.73.0,@aws-cdk/aws-ec2=1.73.0,@aws-cdk/aws-ecr=1.73.0,@aws-cdk/aws-ecr-assets=1.73.0,@aws-cdk/aws-ecs=1.73.0,@aws-cdk/aws-elasticloadbalancingv2=1.73.0,@aws-cdk/aws-emr=1.73.0,@aws-cdk/aws-events=1.73.0,@aws-cdk/aws-events-targets=1.73.0,@aws-cdk/aws-iam=1.73.0,@aws-cdk/aws-kinesis=1.73.0,@aws-cdk/aws-kinesisanalytics=1.73.0,@aws-cdk/aws-kinesisfirehose=1.73.0,@aws-cdk/aws-kms=1.73.0,@aws-cdk/aws-lambda=1.73.0,@aws-cdk/aws-logs=1.73.0,@aws-cdk/aws-s3=1.73.0,@aws-cdk/aws-s3-assets=1.73.0,@aws-cdk/aws-servicediscovery=1.73.0,@aws-cdk/aws-sns=1.73.0,@aws-cdk/aws-sns-subscriptions=1.73.0,@aws-cdk/aws-sqs=1.73.0,@aws-cdk/aws-ssm=1.73.0,@aws-cdk/cloud-assembly-schema=1.73.0,@aws-cdk/core=1.73.0,@aws-cdk/custom-resources=1.73.0,@aws-cdk/cx-api=1.73.0,@aws-cdk/region-info=1.73.0,jsii-runtime=node.js/v10.16.0"
+      },
+      "Metadata": {
+        "aws:cdk:path": "BeamTaxiCount-Complete/CDKMetadata/Default"
+      },
+      "Condition": "CDKMetadataAvailable"
     }
   },
   "Outputs": {
@@ -3647,6 +3745,200 @@
     "SsmParameterValueawsserviceamiamazonlinuxlatestamzn2amihvmx8664gp2C96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Type": "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>",
       "Default": "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
+    }
+  },
+  "Conditions": {
+    "AwsCdkKinesisEncryptedStreamsUnsupportedRegions": {
+      "Fn::Or": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "AWS::Region"
+            },
+            "cn-north-1"
+          ]
+        },
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "AWS::Region"
+            },
+            "cn-northwest-1"
+          ]
+        }
+      ]
+    },
+    "CDKMetadataAvailable": {
+      "Fn::Or": [
+        {
+          "Fn::Or": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "ap-east-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "ap-northeast-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "ap-northeast-2"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "ap-south-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "ap-southeast-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "ap-southeast-2"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "ca-central-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "cn-north-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "cn-northwest-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "eu-central-1"
+              ]
+            }
+          ]
+        },
+        {
+          "Fn::Or": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "eu-north-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "eu-west-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "eu-west-2"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "eu-west-3"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "me-south-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "sa-east-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "us-east-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "us-east-2"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "us-west-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "us-west-2"
+              ]
+            }
+          ]
+        }
+      ]
     }
   }
 }
